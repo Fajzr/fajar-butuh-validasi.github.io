@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Mini Manim Export Video</title>
+<title>Mini Manim Recorder</title>
 
 <!-- MathJax -->
 <script>
 window.MathJax = {
   tex: {
-    inlineMath: [['\\(', '\\)']]
+    inlineMath: [['\\(','\\)']]
   },
   svg: {
     fontCache: 'global'
@@ -19,6 +19,12 @@ window.MathJax = {
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<!-- html2canvas -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas"></script>
+
+<!-- CCapture -->
+<script src="https://cdn.jsdelivr.net/npm/ccapture.js-npmfixed/build/CCapture.all.min.js"></script>
 
 <style>
 
@@ -34,17 +40,17 @@ body{
   font-family:Arial,sans-serif;
 }
 
-/* RENDER AREA */
+/* SCENE */
 #scene{
   position:relative;
 
-  width:1920px;
-  height:1080px;
+  width:1280px;
+  height:720px;
 
   overflow:hidden;
 
   background:
-    radial-gradient(circle at center,#1a1a1a,#000);
+    radial-gradient(circle,#1f1f1f,#000);
 
   transform-origin:top left;
 }
@@ -52,14 +58,15 @@ body{
 /* CAMERA */
 #camera{
   position:absolute;
+
   width:100%;
   height:100%;
 
   transition:
-    transform 3s ease;
+    transform 2s ease;
 }
 
-/* TEXT OBJECT */
+/* OBJECT */
 .object{
   position:absolute;
 
@@ -68,14 +75,14 @@ body{
 
   color:white;
 
-  font-size:72px;
+  font-size:64px;
   font-weight:bold;
 
   opacity:0;
 
   transform:
     translate(-50%,-50%)
-    scale(0.5);
+    scale(.5);
 
   filter:
     blur(20px);
@@ -83,18 +90,17 @@ body{
   transition:
     opacity 2s ease,
     transform 2s ease,
-    filter 2s ease,
-    left 2s ease,
-    top 2s ease;
+    filter 2s ease;
 
   text-shadow:
-    0 0 10px #fff,
-    0 0 20px #fff,
-    0 0 40px #fff;
+    0 0 10px white,
+    0 0 20px white,
+    0 0 40px white;
 }
 
 /* SHOW */
 .show{
+
   opacity:1;
 
   transform:
@@ -103,10 +109,12 @@ body{
 
   filter:
     blur(0px);
+
 }
 
 /* PARTICLES */
 .particle{
+
   position:absolute;
 
   width:4px;
@@ -116,17 +124,18 @@ body{
 
   background:white;
 
-  opacity:.5;
+  opacity:.3;
 
   animation:
     float linear infinite;
+
 }
 
 @keyframes float{
 
   from{
     transform:
-      translateY(1080px);
+      translateY(720px);
   }
 
   to{
@@ -146,17 +155,20 @@ body{
 
 <script>
 
-const scene = document.getElementById("scene");
-const camera = document.getElementById("camera");
+const scene =
+  document.getElementById("scene");
 
-/* SCALE TO SCREEN */
+const camera =
+  document.getElementById("camera");
+
+/* SCALE SCREEN */
 function resize(){
 
   const scaleX =
-    window.innerWidth / 1920;
+    window.innerWidth / 1280;
 
   const scaleY =
-    window.innerHeight / 1080;
+    window.innerHeight / 720;
 
   const scale =
     Math.min(scaleX,scaleY);
@@ -174,7 +186,7 @@ window.addEventListener(
 );
 
 /* PARTICLES */
-for(let i=0;i<120;i++){
+for(let i=0;i<100;i++){
 
   const p =
     document.createElement("div");
@@ -183,16 +195,13 @@ for(let i=0;i<120;i++){
     "particle";
 
   p.style.left =
-    Math.random()*1920+"px";
+    Math.random()*1280+"px";
 
   p.style.top =
-    Math.random()*1080+"px";
+    Math.random()*720+"px";
 
   p.style.animationDuration =
     5 + Math.random()*10 + "s";
-
-  p.style.opacity =
-    Math.random();
 
   scene.appendChild(p);
 
@@ -218,11 +227,42 @@ function createText(content){
   camera.appendChild(div);
 
   return div;
+
 }
 
 /* SLEEP */
 function sleep(ms){
-  return new Promise(r=>setTimeout(r,ms));
+  return new Promise(
+    r=>setTimeout(r,ms)
+  );
+}
+
+/* CAPTURE */
+const capturer =
+  new CCapture({
+
+    format:"webm",
+
+    framerate:60,
+
+    verbose:true
+
+  });
+
+/* RECORD FRAME */
+async function recordFrame(){
+
+  const canvas =
+    await html2canvas(scene,{
+
+      backgroundColor:null,
+
+      useCORS:true
+
+    });
+
+  capturer.capture(canvas);
+
 }
 
 /* ANIMATION */
@@ -233,18 +273,20 @@ async function animateText(
 ){
 
   const {
-    wait=4000,
+
+    wait=3000,
+
     zoom=1,
-    x="50%",
-    y="50%",
+
     scale=1
+
   } = options;
 
   /* CAMERA */
   camera.style.transform =
     `scale(${zoom})`;
 
-  /* REMOVE OLD */
+  /* OLD */
   if(oldObj){
 
     oldObj.style.opacity =
@@ -258,6 +300,7 @@ async function animateText(
 
     oldObj.style.filter =
       "blur(30px)";
+
   }
 
   await sleep(2000);
@@ -266,13 +309,10 @@ async function animateText(
   const obj =
     createText(content);
 
-  obj.style.left = x;
-  obj.style.top = y;
-
   obj.style.transform =
     `
     translate(-50%,-50%)
-    scale(${scale*0.5})
+    scale(${scale*.5})
     `;
 
   await MathJax.typesetPromise([obj]);
@@ -289,171 +329,179 @@ async function animateText(
 
   });
 
-  await sleep(wait);
+  /* RECORD DURING WAIT */
+  const frames =
+    wait / 1000 * 60;
 
-  return obj;
-}
+  for(let i=0;i<frames;i++){
 
-/* ========================= */
-/* VIDEO RECORDING */
-/* ========================= */
+    await recordFrame();
 
-const stream =
-  scene.captureStream(60);
-
-const recorder =
-  new MediaRecorder(
-    stream,
-    {
-      mimeType:"video/webm"
-    }
-  );
-
-const chunks = [];
-
-recorder.ondataavailable = e => {
-
-  if(e.data.size > 0){
-
-    chunks.push(e.data);
+    await sleep(1000/60);
 
   }
 
-};
+  return obj;
 
-recorder.onstop = ()=>{
+}
 
-  const blob =
-    new Blob(
-      chunks,
-      {
-        type:"video/webm"
-      }
-    );
-
-  const url =
-    URL.createObjectURL(blob);
-
-  const a =
-    document.createElement("a");
-
-  a.href = url;
-
-  a.download =
-    "mini-manim.webm";
-
-  document.body.appendChild(a);
-
-  a.click();
-
-  a.remove();
-
-  URL.revokeObjectURL(url);
-
-};
+/* MAIN */
+(async()=>{
 
 /* START RECORD */
-recorder.start();
-
-/* ========================= */
-/* MAIN */
-/* ========================= */
-
-(async()=>{
+capturer.start();
 
 let current = null;
 
 /* TITLE */
 current =
 await animateText(
+
   current,
+
   "\\text{Deret Geometri}",
+
   {
-    wait:5000,
+
+    wait:4000,
+
     zoom:1.1,
+
     scale:1.2
+
   }
+
 );
 
 /* STEP 1 */
 current =
 await animateText(
+
   current,
+
   "S_n = a + ar + ar^2 + \\cdots + ar^{n-1}",
+
   {
-    wait:5000,
+
+    wait:4000,
+
     zoom:1.15
+
   }
+
 );
 
 /* STEP 2 */
 current =
 await animateText(
+
   current,
+
   "S_n = a + r(a + ar + ar^2 + \\cdots + ar^{n-2})",
+
   {
-    wait:5000,
+
+    wait:4000,
+
     zoom:1.2
+
   }
+
 );
 
 /* STEP 3 */
 current =
 await animateText(
+
   current,
+
   "S_n = a + r(S_n-ar^{n-1})",
+
   {
-    wait:5000,
+
+    wait:4000,
+
     zoom:1.25
+
   }
+
 );
 
 /* STEP 4 */
 current =
 await animateText(
+
   current,
+
   "S_n = a + rS_n-ar^n",
+
   {
-    wait:5000,
+
+    wait:4000,
+
     zoom:1.3
+
   }
+
 );
 
 /* STEP 5 */
 current =
 await animateText(
+
   current,
+
   "S_n-rS_n = a-ar^n",
+
   {
-    wait:5000,
+
+    wait:4000,
+
     zoom:1.35
+
   }
+
 );
 
 /* STEP 6 */
 current =
 await animateText(
+
   current,
+
   "(1-r)S_n = a-ar^n",
+
   {
-    wait:5000,
+
+    wait:4000,
+
     zoom:1.4
+
   }
+
 );
 
 /* FINAL */
 current =
 await animateText(
+
   current,
+
   "S_n = \\frac{a(1-r^n)}{1-r}",
+
   {
-    wait:8000,
+
+    wait:7000,
+
     zoom:1.5,
+
     scale:1.3
+
   }
+
 );
 
-/* FINAL GLOW */
+/* EXTRA GLOW */
 current.style.textShadow =
 `
 0 0 20px #fff,
@@ -462,120 +510,23 @@ current.style.textShadow =
 0 0 120px #fff
 `;
 
-/* STOP RECORD */
-await sleep(3000);
+/* LAST RECORD */
+for(let i=0;i<180;i++){
 
-recorder.stop();
+  await recordFrame();
+
+  await sleep(1000/60);
+
+}
+
+/* STOP */
+capturer.stop();
+
+/* SAVE VIDEO */
+capturer.save();
 
 })();
 </script>
 
-</body>
-</html>        ctx.fill();
-        ctx.closePath();
-    }
-
-    update() {
-        if (this.isStatic) return;
-
-        this.x += this.vx;
-        this.y += this.vy;
-
-        // Tambah jejak
-        this.trail.push({x: this.x, y: this.y});
-        if (this.trail.length > 50) this.trail.shift();
-    }
-}
-
-// Inisialisasi: Matahari di tengah
-const sun = new Body(canvas.width / 2, canvas.height / 2, 0, 0, 30, 5000, '#FDB813', true);
-bodies.push(sun);
-
-// Planet kecil awal
-bodies.push(new Body(canvas.width / 2, canvas.height / 2 - 200, 4.5, 0, 8, 10, '#4DA6FF'));
-
-// Logika Fisika Gravitasi
-function applyGravity() {
-    for (let i = 0; i < bodies.length; i++) {
-        for (let j = 0; j < bodies.length; j++) {
-            if (i === j) continue;
-
-            const b1 = bodies[i];
-            const b2 = bodies[j];
-
-            // Vektor jarak
-            const dx = b2.x - b1.x;
-            const dy = b2.y - b1.y;
-            const distanceSq = dx * dx + dy * dy;
-            const distance = Math.sqrt(distanceSq);
-
-            if (distance < (b1.radius + b2.radius)) continue; // Hindari tabrakan super intens
-
-            // Rumus Gravitasi Newton: F = G * m1 * m2 / r^2
-            const force = (G * b1.mass * b2.mass) / distanceSq;
-            
-            // Komponen gaya
-            const fx = force * (dx / distance);
-            const fy = force * (dy / distance);
-
-            // Percepatan: a = F / m
-            if (!b1.isStatic) {
-                b1.vx += fx / b1.mass;
-                b1.vy += fy / b1.mass;
-            }
-        }
-    }
-}
-
-// Animasi Loop
-function animate() {
-    // Efek fade untuk jejak lebih halus
-    ctx.fillStyle = 'rgba(5, 5, 5, 0.3)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    applyGravity();
-    
-    bodies.forEach(body => {
-        body.update();
-        body.draw();
-    });
-
-    requestAnimationFrame(animate);
-}
-
-// Interaksi Mouse
-let isDragging = false;
-let startX, startY;
-
-canvas.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-});
-
-canvas.addEventListener('mouseup', (e) => {
-    if (!isDragging) return;
-    isDragging = false;
-    
-    const endX = e.clientX;
-    const endY = e.clientY;
-
-    // Kecepatan awal berdasarkan tarikan mouse
-    const vx = (startX - endX) / 20;
-    const vy = (startY - endY) / 20;
-
-    // Tambah planet baru
-    bodies.push(new Body(endX, endY, vx, vy, 5, 5, `hsl(${Math.random() * 360}, 70%, 70%)`));
-});
-
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    sun.x = canvas.width / 2;
-    sun.y = canvas.height / 2;
-});
-
-animate();
-</script>
 </body>
 </html>
