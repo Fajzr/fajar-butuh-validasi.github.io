@@ -40,8 +40,38 @@ body{
   font-family:Arial,sans-serif;
 }
 
+/* BUTTON */
+#startBtn{
+
+  position:fixed;
+
+  top:20px;
+  left:20px;
+
+  z-index:99999;
+
+  padding:14px 24px;
+
+  border:none;
+  border-radius:12px;
+
+  background:#ffffff;
+
+  color:#000;
+
+  font-size:18px;
+  font-weight:bold;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 0 10px rgba(255,255,255,.5);
+
+}
+
 /* SCENE */
 #scene{
+
   position:relative;
 
   width:1280px;
@@ -53,10 +83,12 @@ body{
     radial-gradient(circle,#1f1f1f,#000);
 
   transform-origin:top left;
+
 }
 
 /* CAMERA */
 #camera{
+
   position:absolute;
 
   width:100%;
@@ -64,10 +96,12 @@ body{
 
   transition:
     transform 2s ease;
+
 }
 
 /* OBJECT */
 .object{
+
   position:absolute;
 
   left:50%;
@@ -96,6 +130,7 @@ body{
     0 0 10px white,
     0 0 20px white,
     0 0 40px white;
+
 }
 
 /* SHOW */
@@ -149,6 +184,10 @@ body{
 </head>
 <body>
 
+<button id="startBtn">
+START & DOWNLOAD VIDEO
+</button>
+
 <div id="scene">
   <div id="camera"></div>
 </div>
@@ -161,7 +200,10 @@ const scene =
 const camera =
   document.getElementById("camera");
 
-/* SCALE SCREEN */
+const startBtn =
+  document.getElementById("startBtn");
+
+/* SCALE */
 function resize(){
 
   const scaleX =
@@ -232,25 +274,15 @@ function createText(content){
 
 /* SLEEP */
 function sleep(ms){
+
   return new Promise(
     r=>setTimeout(r,ms)
   );
+
 }
 
-/* CAPTURE */
-const capturer =
-  new CCapture({
-
-    format:"webm",
-
-    framerate:60,
-
-    verbose:true
-
-  });
-
 /* RECORD FRAME */
-async function recordFrame(){
+async function recordFrame(capturer){
 
   const canvas =
     await html2canvas(scene,{
@@ -267,6 +299,7 @@ async function recordFrame(){
 
 /* ANIMATION */
 async function animateText(
+  capturer,
   oldObj,
   content,
   options={}
@@ -286,7 +319,7 @@ async function animateText(
   camera.style.transform =
     `scale(${zoom})`;
 
-  /* OLD */
+  /* REMOVE OLD */
   if(oldObj){
 
     oldObj.style.opacity =
@@ -305,7 +338,7 @@ async function animateText(
 
   await sleep(2000);
 
-  /* NEW */
+  /* NEW OBJECT */
   const obj =
     createText(content);
 
@@ -329,13 +362,13 @@ async function animateText(
 
   });
 
-  /* RECORD DURING WAIT */
+  /* RECORD */
   const frames =
     wait / 1000 * 60;
 
   for(let i=0;i<frames;i++){
 
-    await recordFrame();
+    await recordFrame(capturer);
 
     await sleep(1000/60);
 
@@ -345,187 +378,225 @@ async function animateText(
 
 }
 
-/* MAIN */
-(async()=>{
+/* START BUTTON */
+startBtn.onclick = async()=>{
 
-/* START RECORD */
-capturer.start();
+  startBtn.disabled = true;
 
-let current = null;
+  startBtn.innerText =
+    "RENDERING VIDEO...";
 
-/* TITLE */
-current =
-await animateText(
+  /* CAPTURER */
+  const capturer =
+    new CCapture({
 
-  current,
+      format:"webm",
 
-  "\\text{Deret Geometri}",
+      framerate:60,
 
-  {
+      verbose:true
 
-    wait:4000,
+    });
 
-    zoom:1.1,
+  capturer.start();
 
-    scale:1.2
+  let current = null;
+
+  /* TITLE */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "\\text{Deret Geometri}",
+
+    {
+
+      wait:4000,
+
+      zoom:1.1,
+
+      scale:1.2
+
+    }
+
+  );
+
+  /* STEP 1 */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "S_n = a + ar + ar^2 + \\cdots + ar^{n-1}",
+
+    {
+
+      wait:4000,
+
+      zoom:1.15
+
+    }
+
+  );
+
+  /* STEP 2 */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "S_n = a + r(a + ar + ar^2 + \\cdots + ar^{n-2})",
+
+    {
+
+      wait:4000,
+
+      zoom:1.2
+
+    }
+
+  );
+
+  /* STEP 3 */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "S_n = a + r(S_n-ar^{n-1})",
+
+    {
+
+      wait:4000,
+
+      zoom:1.25
+
+    }
+
+  );
+
+  /* STEP 4 */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "S_n = a + rS_n-ar^n",
+
+    {
+
+      wait:4000,
+
+      zoom:1.3
+
+    }
+
+  );
+
+  /* STEP 5 */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "S_n-rS_n = a-ar^n",
+
+    {
+
+      wait:4000,
+
+      zoom:1.35
+
+    }
+
+  );
+
+  /* STEP 6 */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "(1-r)S_n = a-ar^n",
+
+    {
+
+      wait:4000,
+
+      zoom:1.4
+
+    }
+
+  );
+
+  /* FINAL */
+  current =
+  await animateText(
+
+    capturer,
+
+    current,
+
+    "S_n = \\frac{a(1-r^n)}{1-r}",
+
+    {
+
+      wait:7000,
+
+      zoom:1.5,
+
+      scale:1.3
+
+    }
+
+  );
+
+  /* FINAL GLOW */
+  current.style.textShadow =
+  `
+  0 0 20px #fff,
+  0 0 40px #fff,
+  0 0 80px #fff,
+  0 0 120px #fff
+  `;
+
+  /* LAST RECORD */
+  for(let i=0;i<180;i++){
+
+    await recordFrame(capturer);
+
+    await sleep(1000/60);
 
   }
 
-);
+  /* STOP */
+  capturer.stop();
 
-/* STEP 1 */
-current =
-await animateText(
+  startBtn.innerText =
+    "DOWNLOADING...";
 
-  current,
+  capturer.save();
 
-  "S_n = a + ar + ar^2 + \\cdots + ar^{n-1}",
+  startBtn.innerText =
+    "DONE";
 
-  {
+};
 
-    wait:4000,
-
-    zoom:1.15
-
-  }
-
-);
-
-/* STEP 2 */
-current =
-await animateText(
-
-  current,
-
-  "S_n = a + r(a + ar + ar^2 + \\cdots + ar^{n-2})",
-
-  {
-
-    wait:4000,
-
-    zoom:1.2
-
-  }
-
-);
-
-/* STEP 3 */
-current =
-await animateText(
-
-  current,
-
-  "S_n = a + r(S_n-ar^{n-1})",
-
-  {
-
-    wait:4000,
-
-    zoom:1.25
-
-  }
-
-);
-
-/* STEP 4 */
-current =
-await animateText(
-
-  current,
-
-  "S_n = a + rS_n-ar^n",
-
-  {
-
-    wait:4000,
-
-    zoom:1.3
-
-  }
-
-);
-
-/* STEP 5 */
-current =
-await animateText(
-
-  current,
-
-  "S_n-rS_n = a-ar^n",
-
-  {
-
-    wait:4000,
-
-    zoom:1.35
-
-  }
-
-);
-
-/* STEP 6 */
-current =
-await animateText(
-
-  current,
-
-  "(1-r)S_n = a-ar^n",
-
-  {
-
-    wait:4000,
-
-    zoom:1.4
-
-  }
-
-);
-
-/* FINAL */
-current =
-await animateText(
-
-  current,
-
-  "S_n = \\frac{a(1-r^n)}{1-r}",
-
-  {
-
-    wait:7000,
-
-    zoom:1.5,
-
-    scale:1.3
-
-  }
-
-);
-
-/* EXTRA GLOW */
-current.style.textShadow =
-`
-0 0 20px #fff,
-0 0 40px #fff,
-0 0 80px #fff,
-0 0 120px #fff
-`;
-
-/* LAST RECORD */
-for(let i=0;i<180;i++){
-
-  await recordFrame();
-
-  await sleep(1000/60);
-
-}
-
-/* STOP */
-capturer.stop();
-
-/* SAVE VIDEO */
-capturer.save();
-
-})();
 </script>
 
 </body>
