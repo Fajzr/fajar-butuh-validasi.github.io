@@ -1,67 +1,477 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulasi Gravitasi Planet</title>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #050505; color: white; font-family: sans-serif; }
-        canvas { display: block; }
-        #instructions {
-            position: absolute; top: 10px; left: 10px;
-            pointer-events: none;
-            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Mini Manim Export Video</title>
+
+<!-- MathJax -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  overflow:hidden;
+  background:#000;
+  font-family:Arial,sans-serif;
+}
+
+/* RENDER AREA */
+#scene{
+  position:relative;
+
+  width:1920px;
+  height:1080px;
+
+  overflow:hidden;
+
+  background:
+    radial-gradient(circle at center,#1a1a1a,#000);
+
+  transform-origin:top left;
+}
+
+/* CAMERA */
+#camera{
+  position:absolute;
+  width:100%;
+  height:100%;
+
+  transition:
+    transform 3s ease;
+}
+
+/* TEXT OBJECT */
+.object{
+  position:absolute;
+
+  left:50%;
+  top:50%;
+
+  color:white;
+
+  font-size:72px;
+  font-weight:bold;
+
+  opacity:0;
+
+  transform:
+    translate(-50%,-50%)
+    scale(0.5);
+
+  filter:
+    blur(20px);
+
+  transition:
+    opacity 2s ease,
+    transform 2s ease,
+    filter 2s ease,
+    left 2s ease,
+    top 2s ease;
+
+  text-shadow:
+    0 0 10px #fff,
+    0 0 20px #fff,
+    0 0 40px #fff;
+}
+
+/* SHOW */
+.show{
+  opacity:1;
+
+  transform:
+    translate(-50%,-50%)
+    scale(1);
+
+  filter:
+    blur(0px);
+}
+
+/* PARTICLES */
+.particle{
+  position:absolute;
+
+  width:4px;
+  height:4px;
+
+  border-radius:50%;
+
+  background:white;
+
+  opacity:.5;
+
+  animation:
+    float linear infinite;
+}
+
+@keyframes float{
+
+  from{
+    transform:
+      translateY(1080px);
+  }
+
+  to{
+    transform:
+      translateY(-100px);
+  }
+
+}
+
+</style>
 </head>
 <body>
-    <div id="instructions">
-        <h3>Simulasi Gravitasi</h3>
-        <p>Klik & tahan untuk menambah planet baru</p>
-    </div>
-    <canvas id="simCanvas"></canvas>
+
+<div id="scene">
+  <div id="camera"></div>
+</div>
 
 <script>
-const canvas = document.getElementById('simCanvas');
-const ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const scene = document.getElementById("scene");
+const camera = document.getElementById("camera");
 
-// Konstanta Fisika (disesuaikan untuk simulasi visual)
-const G = 1; 
-const bodies = [];
+/* SCALE TO SCREEN */
+function resize(){
 
-// Class untuk Planet/Benda Langit
-class Body {
-    constructor(x, y, vx, vy, radius, mass, color, isStatic = false) {
-        this.x = x;
-        this.y = y;
-        this.vx = vx;
-        this.vy = vy;
-        this.radius = radius;
-        this.mass = mass;
-        this.color = color;
-        this.isStatic = isStatic; // Untuk matahari/benda pusat
-        this.trail = [];
+  const scaleX =
+    window.innerWidth / 1920;
+
+  const scaleY =
+    window.innerHeight / 1080;
+
+  const scale =
+    Math.min(scaleX,scaleY);
+
+  scene.style.transform =
+    `scale(${scale})`;
+
+}
+
+resize();
+
+window.addEventListener(
+  "resize",
+  resize
+);
+
+/* PARTICLES */
+for(let i=0;i<120;i++){
+
+  const p =
+    document.createElement("div");
+
+  p.className =
+    "particle";
+
+  p.style.left =
+    Math.random()*1920+"px";
+
+  p.style.top =
+    Math.random()*1080+"px";
+
+  p.style.animationDuration =
+    5 + Math.random()*10 + "s";
+
+  p.style.opacity =
+    Math.random();
+
+  scene.appendChild(p);
+
+}
+
+/* LATEX */
+function latex(t){
+  return `\\(${t}\\)`;
+}
+
+/* CREATE TEXT */
+function createText(content){
+
+  const div =
+    document.createElement("div");
+
+  div.className =
+    "object";
+
+  div.innerHTML =
+    latex(content);
+
+  camera.appendChild(div);
+
+  return div;
+}
+
+/* SLEEP */
+function sleep(ms){
+  return new Promise(r=>setTimeout(r,ms));
+}
+
+/* ANIMATION */
+async function animateText(
+  oldObj,
+  content,
+  options={}
+){
+
+  const {
+    wait=4000,
+    zoom=1,
+    x="50%",
+    y="50%",
+    scale=1
+  } = options;
+
+  /* CAMERA */
+  camera.style.transform =
+    `scale(${zoom})`;
+
+  /* REMOVE OLD */
+  if(oldObj){
+
+    oldObj.style.opacity =
+      "0";
+
+    oldObj.style.transform =
+      `
+      translate(-50%,-50%)
+      scale(1.5)
+      `;
+
+    oldObj.style.filter =
+      "blur(30px)";
+  }
+
+  await sleep(2000);
+
+  /* NEW */
+  const obj =
+    createText(content);
+
+  obj.style.left = x;
+  obj.style.top = y;
+
+  obj.style.transform =
+    `
+    translate(-50%,-50%)
+    scale(${scale*0.5})
+    `;
+
+  await MathJax.typesetPromise([obj]);
+
+  requestAnimationFrame(()=>{
+
+    obj.classList.add("show");
+
+    obj.style.transform =
+      `
+      translate(-50%,-50%)
+      scale(${scale})
+      `;
+
+  });
+
+  await sleep(wait);
+
+  return obj;
+}
+
+/* ========================= */
+/* VIDEO RECORDING */
+/* ========================= */
+
+const stream =
+  scene.captureStream(60);
+
+const recorder =
+  new MediaRecorder(
+    stream,
+    {
+      mimeType:"video/webm"
     }
+  );
 
-    draw() {
-        // Gambar jejak (trail)
-        ctx.beginPath();
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i < this.trail.length; i++) {
-            const p = this.trail[i];
-            ctx.lineTo(p.x, p.y);
-        }
-        ctx.stroke();
+const chunks = [];
 
-        // Gambar planet
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
+recorder.ondataavailable = e => {
+
+  if(e.data.size > 0){
+
+    chunks.push(e.data);
+
+  }
+
+};
+
+recorder.onstop = ()=>{
+
+  const blob =
+    new Blob(
+      chunks,
+      {
+        type:"video/webm"
+      }
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    "mini-manim.webm";
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+  URL.revokeObjectURL(url);
+
+};
+
+/* START RECORD */
+recorder.start();
+
+/* ========================= */
+/* MAIN */
+/* ========================= */
+
+(async()=>{
+
+let current = null;
+
+/* TITLE */
+current =
+await animateText(
+  current,
+  "\\text{Deret Geometri}",
+  {
+    wait:5000,
+    zoom:1.1,
+    scale:1.2
+  }
+);
+
+/* STEP 1 */
+current =
+await animateText(
+  current,
+  "S_n = a + ar + ar^2 + \\cdots + ar^{n-1}",
+  {
+    wait:5000,
+    zoom:1.15
+  }
+);
+
+/* STEP 2 */
+current =
+await animateText(
+  current,
+  "S_n = a + r(a + ar + ar^2 + \\cdots + ar^{n-2})",
+  {
+    wait:5000,
+    zoom:1.2
+  }
+);
+
+/* STEP 3 */
+current =
+await animateText(
+  current,
+  "S_n = a + r(S_n-ar^{n-1})",
+  {
+    wait:5000,
+    zoom:1.25
+  }
+);
+
+/* STEP 4 */
+current =
+await animateText(
+  current,
+  "S_n = a + rS_n-ar^n",
+  {
+    wait:5000,
+    zoom:1.3
+  }
+);
+
+/* STEP 5 */
+current =
+await animateText(
+  current,
+  "S_n-rS_n = a-ar^n",
+  {
+    wait:5000,
+    zoom:1.35
+  }
+);
+
+/* STEP 6 */
+current =
+await animateText(
+  current,
+  "(1-r)S_n = a-ar^n",
+  {
+    wait:5000,
+    zoom:1.4
+  }
+);
+
+/* FINAL */
+current =
+await animateText(
+  current,
+  "S_n = \\frac{a(1-r^n)}{1-r}",
+  {
+    wait:8000,
+    zoom:1.5,
+    scale:1.3
+  }
+);
+
+/* FINAL GLOW */
+current.style.textShadow =
+`
+0 0 20px #fff,
+0 0 40px #fff,
+0 0 80px #fff,
+0 0 120px #fff
+`;
+
+/* STOP RECORD */
+await sleep(3000);
+
+recorder.stop();
+
+})();
+</script>
+
+</body>
+</html>        ctx.fill();
         ctx.closePath();
     }
 
